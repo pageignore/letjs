@@ -5,7 +5,11 @@ import { javascript } from "@codemirror/lang-javascript";
 import { getId, onClick, isArray, isObject } from './utils';
 import { stepMount } from './component/step';
 import { resMount } from './component/res';
-import { insertionSort } from './component/codeStr';
+import { insertionSort, codeStr5 } from './component/codeStr';
+import { parseScript } from 'esprima';
+import { generate } from 'escodegen';
+import { variableSets, transform, unshiftStateCode } from './code';
+// import transformer from './transform';
 
 let autoPlayTimer = null;//自动播放动画定时器
 let View = null;//代码编辑器
@@ -76,7 +80,32 @@ function stepStop() {
 function run() {
     stop(); //每次运行停止之前的动画
     initData(); // 初始化数据
+    let docStr = getDocStr();
+    // console.log(docStr, 'doc')
+    let ast = parseScript(docStr);
+    let astBody = ast && ast.body;
+    let netAstBody = transform(astBody);
+    console.log(netAstBody, 'netAstBody')
+    console.log(variableSets, 'variableSets')
+    netAstBody = unshiftStateCode(netAstBody);
+    setStates(variableSets);
+    let newAst = {
+        type: 'Program',
+        sourceType: 'script',
+        body: netAstBody
+    }
+    // let newAst = transform(ast, variableSets);
+    // console.log(a)
+    let b = generate(newAst);
+    console.log(b)
+    let func = new Function(b)
+    func.call(state, state)
+    return
+    // console.log(a);
+    stop(); //每次运行停止之前的动画
+    initData(); // 初始化数据
     let jscode = codeInit();
+    console.log(jscode, 'jscode')
     try {
         let func = new Function(jscode)
         func.call(state)
@@ -93,6 +122,7 @@ function run() {
 // 通过编辑其获取代码字符串并完成响应式替换
 function codeInit() {
     let docStr = getDocStr();
+    return docStr;
     let varNames =  getVarNames(docStr);
     let fnNames = getFnNames(docStr);
     let newVarNames = resetVar(varNames);
@@ -107,14 +137,14 @@ function getDocStr() {
         if(t[t.length - 1] != ';') {
             t+=';'
         }
-        docStr += t
+        docStr += `${t}`
     });
     return docStr;
 }
 
 function codeEdotorInit() {
     View = new EditorView({
-        doc: insertionSort,
+        doc: codeStr5,
         extensions: [basicSetup, javascript()],
         parent: document.getElementById('editor')
     })
@@ -133,6 +163,7 @@ function initData() {
     domData.step = 0;
     stepData.data = [];
     domData.stepRes = {};
+    variableSets.clear();
 }
 
 
@@ -181,7 +212,7 @@ function resetVar(varNames) {
 
 // 获取模板中定义的变量
 function getVarNames(str) {
-    let reg = /\b(let |const )\w+/g;
+    let reg = /\b(var |let |const )\w+/g;
     return match(str)(reg);
 }
 
@@ -201,6 +232,12 @@ function match(str) {
             res.push(v)
         })
         return res;
+    }
+}
+
+function setStates(sets) {
+    for(let name of sets) {
+        state[name] = null;
     }
 }
 
@@ -262,7 +299,7 @@ function shiftEmptyData() {
 
 
 function replaceTemp(str, varNames, fnNames) {
-    let varReg =  /\b(let |const )/g;
+    let varReg =  /\b(var |let |const )/g;
     let temp = str.replace(varReg, '');
     // 将变量指针改到state响应式数据
     varNames && varNames.forEach(item => {

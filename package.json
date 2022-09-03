@@ -18,6 +18,9 @@
     "@vue/reactivity": "^3.2.38",
     "@vue/runtime-core": "^3.2.38",
     "@vue/runtime-dom": "^3.2.38",
-    "codemirror": "^6.0.1"
+    "codemirror": "^6.0.1",
+    "escodegen": "^2.0.0",
+    "esprima": "^4.0.1",
+    "recast": "^0.21.2"
   }
 }

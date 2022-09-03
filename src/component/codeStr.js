@@ -64,3 +64,21 @@ function insertionSort(arr) {
 let test = [10,2,7,4,20,5,6]
 insertionSort(test);
 `
+
+export const codeStr5 = `function add(a, b) {
+    a+=2
+    let c = 4;
+    return a + b + c;
+}
+let as = 1;
+const bs = as;
+as = 3;
+as = bs;
+LETJS_STATE.as = 3;
+LETJS_STATE.as = LETJS_STATE.bs;
+let res = add(as,bs)
+add(1,2)
+add(as,bs);
+add(LETJS_STATE.as,LETJS_STATE.bs);
+console.log(res)
+`
