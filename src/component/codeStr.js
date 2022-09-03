@@ -38,7 +38,9 @@ function sort(arr) {
         }
     }
   }
-  let test = [5,2,4]
+  let test = [5,2,4];
+  let ssss = 2;
+  let b = test = ssss = 4
   sort(test);
   `
 

@@ -13,37 +13,94 @@ export const variableSets = new Set();
  * @param {Set} variableSets 变量名Set容器
  * @returns net ast 替换后的抽象语法树
  */
- export function transform(astBody , sets = variableSets) {
-    if(!astBody) return;
-    astBody = astBody.map(item => {
-        // 变量类型
-        if(item.type === 'VariableDeclaration') {
-            // 变量名 a; let a = '11'
-            let name = item.declarations[0].id.name;
-            // 同名 变量名后面加_
-            if(sets.has(name)) {
-                name += '_'; 
-            }
-            sets.add(name);
-            // 变量的值
-            let value = item.declarations[0].init;
-            item = variableChange(name, value);
+ export function transform(astNote , sets = variableSets) {
+    if(!astNote) return;
+    astNote = isNeedChange(astNote) ? valChange(astNote.name) : astNote;
+    // 变量类型
+    if(astNote.type === 'VariableDeclaration') {
+        // 变量名 a; let a = '11'
+        let name = astNote.declarations[0].id.name;
+        // 同名 变量名后面加_
+        if(sets.has(name)) {
+            name += '_'; 
         }
-        // 表达式
-        if(item.type === 'ExpressionStatement') {
-            item = expressionChange(item);
+        sets.add(name);
+        // 变量的值
+        let value = astNote.declarations[0].init;
+        if(value.type === 'VariableDeclaration') {
+            astNote = variableChange(name, value);
+        } else {
+            astNote = transform(value);
         }
-        // return 语句
-        if(item.type === 'ReturnStatement') {
-            item = returnChange(item);
+        astNote = variableChange(name, value);
+    }
+    // 赋值表达式
+    if(astNote.type === 'AssignmentExpression') {
+        if(astNote.left) astNote.left = transform(astNote.left);
+        if(astNote.right) astNote.right = transform(astNote.right);
+    }
+    if(astNote.type === 'CallExpression') {
+        if(astNote.arguments) astNote.arguments = astNote.arguments.map(item => transform(item, sets));
+        if(astNote.callee) astNote.callee = transform(astNote.callee);
+    }
+    // return 语句
+    if(astNote.type === 'ReturnStatement') {
+        // astNote = returnChange(astNote)
+        if(isNeedChange(astNote.argument)) {
+            astNote.argument = valChange(astNote.argument.name)
+        } else {
+            if(astNote.argument.left) astNote.argument.left = transform(astNote.argument.left);
+            if(astNote.argument.right) astNote.argument.right = transform(astNote.argument.right);
         }
-        // 函数体继续寻找变量
-        if(item.type === 'FunctionDeclaration') {
-            item.body.body = transform(item.body.body, sets);
-        }
-        return item;
-    })
-    return astBody;
+        
+    }
+    // 属性操作符
+    if(astNote.type === 'MemberExpression') {
+        if(astNote.object.type === 'Identifier'
+         && variableSets.has(astNote.object.name)) {
+            astNote.object = valChange(astNote.object.name);
+         }
+    }
+
+    // 表达式
+    if(astNote.type === 'ExpressionStatement') {
+        if(astNote.expression) astNote.expression = transform(astNote.expression);
+    }
+
+    // if语句 三元运算符
+    if(astNote.type === 'IfStatement' || astNote.type === 'ConditionalExpression') {
+        astNote.test = transform(astNote.test);
+        if(astNote.consequent) astNote.consequent = transform(astNote.consequent);
+        if(astNote.alternate) astNote.alternate = transform(astNote.alternate);
+    }
+
+    //逻辑表达式
+    if(astNote.type === 'LogicalExpression') {
+        if(astNote.left) astNote.left = transform(astNote.left);
+        if(astNote.right) astNote.right = transform(astNote.right);
+    }
+
+    if(astNote.type === 'BinaryExpression') {
+        if(astNote.left) astNote.left = transform(astNote.left);
+        if(astNote.right) astNote.right = transform(astNote.left);
+    }
+
+    // 函数体继续寻找变量
+    if(astNote.type === 'FunctionDeclaration') {
+        astNote.body.body = astNote.body.body.map(item => transform(item, sets));
+    }
+    // 循环体
+    if(astNote.type === 'WhileStatement') {
+        astNote.test = transform(astNote.test);
+        astNote.body.body = astNote.body.body.map(item => transform(item, sets));
+    }
+    if(astNote.type === 'BlockStatement') {
+        if(astNote.body) astNote.body = astNote.body.map(item => transform(item, sets));
+    }
+    if(astNote.type === 'Program') {
+        astNote.body = astNote.body.map(item => transform(item, sets));
+    }
+    return astNote;
 }
 
 /**
@@ -54,7 +111,7 @@ export const variableSets = new Set();
  * @returns 返回添加了全局state变量的抽象语法树
  */
  export function unshiftStateCode(ast) {
-    if(!ast) return;
+    if(!ast || ast.type != 'Program') return;
     // 头部添加全局变量用于绑定响应式数据
     // const LETJS_STATE = this;
     let codeNode = {
@@ -73,7 +130,7 @@ export const variableSets = new Set();
         ],
         kind: "const"
     }
-    ast.unshift(codeNode);
+    ast.body.unshift(codeNode);
     return ast;
 }
 
@@ -101,82 +158,8 @@ function variableChange(name, value) {
 }
 
 /**
- * 函数调用表达式中的参数替换变量
- * @param {*} node 
- * @returns 
- */
-function expressionChange(node) {
-    let expression = node.expression;
-    let type = node.expression.type;
-    // 函数调用表达式
-    if(type === 'CallExpression') {
-        expression = argumentsChange(expression);
-    } else {
-        // 赋值表达式的右边是函数调用表达式
-        if(expression.right && expression.right.type === 'CallExpression') {
-            expression.right = argumentsChange(expression.right);   
-        } else {
-            if(isNeedChange(expression.left)) {
-                expression.left = valChange(expression.left.name);
-            }
-            if(isNeedChange(expression.right)) {
-                expression.right = valChange(expression.right.name);
-            }
-        }
-    }
-    return node;
-}
-
-/**
- * 函数声明中的变量名称替换
- * @param {*} node 
- * @returns 
- */
-function argumentsChange(node) {
-    node.arguments = node.arguments.map(item => {
-        if(isNeedChange(item)) {
-            // 变量类型
-            item = valChange(item.name);
-        }
-        return item;
-    })
-    return node;
-}
-
-/**
- * return 语句替换变量
- * @param {*} node 
- * @returns 
- */
-function returnChange(node) {
-    // return 返回值一个变量
-    if(isNeedChange(node.argument)) {
-        node.argument = valChange(node.argument.name)
-    }
-    // 多个操作操作 return a+b+c+5*6;
-    if(node.argument.type === 'BinaryExpression') {
-        node.arguments = binaryExpressionChange(node.argument);
-    }
-    return node;
-}
-
-/**
- * BinaryExpression 类型节点替换变量
- * @param {*} node 
- * @returns 
- */
- function binaryExpressionChange(node) {
-    if(!node) return;
-    node = isNeedChange(node) ? valChange(node.name) : node;
-    if(node.left) node.left = binaryExpressionChange(node.left);
-    if(node.right) node.right = binaryExpressionChange(node.right);
-    return node;
-}
-
-
-/**
  * 替换变量节点
- * @param {*} name 变量名称
+ * @param {*} node 变量名称
  * @returns 
  */
 function valChange(name) {

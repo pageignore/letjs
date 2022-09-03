@@ -5,7 +5,7 @@ import { javascript } from "@codemirror/lang-javascript";
 import { getId, onClick, isArray, isObject } from './utils';
 import { stepMount } from './component/step';
 import { resMount } from './component/res';
-import { insertionSort, codeStr5 } from './component/codeStr';
+import { codeStr2, codeStr5 } from './component/codeStr';
 import { parseScript } from 'esprima';
 import { generate } from 'escodegen';
 import { variableSets, transform, unshiftStateCode } from './code';
@@ -80,34 +80,19 @@ function stepStop() {
 function run() {
     stop(); //每次运行停止之前的动画
     initData(); // 初始化数据
-    let docStr = getDocStr();
-    // console.log(docStr, 'doc')
-    let ast = parseScript(docStr);
-    let astBody = ast && ast.body;
-    let netAstBody = transform(astBody);
-    console.log(netAstBody, 'netAstBody')
-    console.log(variableSets, 'variableSets')
-    netAstBody = unshiftStateCode(netAstBody);
+    let jscodeStr = jscodeFromDoctext();
+    let ast = parseScript(jscodeStr);
+    let newAst = transform(ast);
+    newAst = unshiftStateCode(newAst);
+    console.log(newAst, 'newAst')
     setStates(variableSets);
-    let newAst = {
-        type: 'Program',
-        sourceType: 'script',
-        body: netAstBody
-    }
+    watchState();
     // let newAst = transform(ast, variableSets);
     // console.log(a)
-    let b = generate(newAst);
-    console.log(b)
-    let func = new Function(b)
-    func.call(state, state)
-    return
-    // console.log(a);
-    stop(); //每次运行停止之前的动画
-    initData(); // 初始化数据
-    let jscode = codeInit();
-    console.log(jscode, 'jscode')
+    let letJsCode = generate(newAst);
+    console.log(letJsCode)
     try {
-        let func = new Function(jscode)
+        let func = new Function(letJsCode)
         func.call(state)
     } catch(e) {
         throw e;
@@ -119,32 +104,22 @@ function run() {
     isAuto ? autoStep() : null; // 默认自动播放
 }
 
-// 通过编辑其获取代码字符串并完成响应式替换
-function codeInit() {
-    let docStr = getDocStr();
-    return docStr;
-    let varNames =  getVarNames(docStr);
-    let fnNames = getFnNames(docStr);
-    let newVarNames = resetVar(varNames);
-    setState(newVarNames);
-    return  replaceTemp(docStr, newVarNames, fnNames);
-}
-
-function getDocStr() {
-    let docStr = '';
+//通过编辑其获取代码字符串并完成响应式替换
+function jscodeFromDoctext() {
+    let jscodeStr = '';
     const doc = View.state.doc;
     doc.text.forEach(t => {
         if(t[t.length - 1] != ';') {
             t+=';'
         }
-        docStr += `${t}`
+        jscodeStr += `${t}`
     });
-    return docStr;
+    return jscodeStr;
 }
 
 function codeEdotorInit() {
     View = new EditorView({
-        doc: codeStr5,
+        doc: codeStr2,
         extensions: [basicSetup, javascript()],
         parent: document.getElementById('editor')
     })
@@ -195,60 +170,17 @@ function stop() {
     autoPlayTimer = null;
 }
 
-
-// 重新设置变量名。避免重名
-function resetVar(varNames) {
-    let res = [];
-    const varSets = new Set();
-    varNames.forEach(item => {
-        if(varSets.has(item)) {
-            item += '__';
-        }
-        varSets.add(item);
-        res.push(item);
-    })
-    return res;
-};
-
-// 获取模板中定义的变量
-function getVarNames(str) {
-    let reg = /\b(var |let |const )\w+/g;
-    return match(str)(reg);
-}
-
-// 获取模板中定义的函数
-function getFnNames(str) {
-    let reg = /\b(function )\w+/g;
-    return match(str)(reg);
-}
-
-// 模板匹配
-function match(str) {
-    return function(reg)  {
-        let res = [];
-        let ret = str.match(reg)
-        ret && ret.forEach(item => {
-            let v = item.split(' ')[1];
-            res.push(v)
-        })
-        return res;
-    }
-}
-
 function setStates(sets) {
     for(let name of sets) {
         state[name] = null;
     }
 }
 
-function setState(varNames) {
-    if(!varNames.length === 0) return null;
-    varNames.forEach(item => {
-        state[item] = null;
-    })
+function watchState() {
     const scope = effectScope();
     scope.run(() => {
-        varNames.forEach(item => {
+        console.log(state, 'ress')
+        for(let item in state) {
             domData.names.push(item);
             effect(() => {
                 let row = {
@@ -278,7 +210,7 @@ function setState(varNames) {
                 }
                 stepData.data.push(row); //添加每一次变化的数据
             })
-        })
+        }
         
     })
     setTimeout(() => {
@@ -295,25 +227,4 @@ function shiftEmptyData() {
             return;
         }
     })
-}
-
-
-function replaceTemp(str, varNames, fnNames) {
-    let varReg =  /\b(var |let |const )/g;
-    let temp = str.replace(varReg, '');
-    // 将变量指针改到state响应式数据
-    varNames && varNames.forEach(item => {
-        // let ret = item.replace(/_*$/g, '')
-        temp = temp.replace(eval(`/\\b${item}\\b/g`), `this.${item}`);
-    })
-    // 替换模板函数，用于this指向state响应式数据
-    fnNames && fnNames.forEach(item => {
-        // 替换函数调用
-        let useFn =  eval(`/\\b${item}\\(/g`);
-        temp = temp.replace(useFn, `${item}.call(this,`);
-        // 还原函数定义
-        let defineFnReg =  eval(`/\\b[?!function ]+${item}.call\\(this[,]/g`);
-        temp = temp.replace(defineFnReg, `function ${item}(`)
-    })
-    return temp;
 }
