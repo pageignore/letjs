@@ -1,33 +1,9 @@
-/**
- * 
- * @param {Array} ast js抽象语法树
- * @param {Set} sets // 变量名Set容器
- * @returns {Set} sets 变量名Set容器
- */
-export function getVariables(ast , sets = new Set()) {
-    if(!ast) return;
-    ast.forEach(item => {
-        // 变量类型
-        if(item.type === 'VariableDeclaration') {
-            let name = item.declarations[0].id.name;
-            // 同名 变量名后面加_
-            if(sets.has(name)) {
-                name += '_'; 
-            }
-            sets.add(name);
-        }
-        // 函数体继续寻找变量
-        if(item.type === 'FunctionDeclaration') {
-            getVariables(item.body.body, sets);
-        }
-    })
-    return sets;
-}
 
+// 用于传递到js执行代码的全局响应式变量名
 const GLOBALSTATE = 'LETJS_STATE';
 
 /**
- * 
+ * 代码中定义的变量集合
  */
 export const variableSets = new Set();
 
