@@ -47,6 +47,37 @@ export const variableSets = new Set();
 }
 
 /**
+ * js执行代码顶部添加全局响应式变量引用定义
+ * const LETJS_STATE = this;
+ * 
+ * @param {*} ast 抽象语法树
+ * @returns 返回添加了全局state变量的抽象语法树
+ */
+ export function unshiftStateCode(ast) {
+    if(!ast) return;
+    // 头部添加全局变量用于绑定响应式数据
+    // const LETJS_STATE = this;
+    let codeNode = {
+        type: 'VariableDeclaration',
+        declarations: [
+            {
+                type: 'VariableDeclarator',
+                id: {
+                    type: 'Identifier',
+                    name: GLOBALSTATE
+                },
+                init: {
+                    type: 'ThisExpression'
+                }
+            }
+        ],
+        kind: "const"
+    }
+    ast.unshift(codeNode);
+    return ast;
+}
+
+/**
  * 变量定义语句替换
  * @param {*} name 
  * @param {*} value 
@@ -142,36 +173,6 @@ function returnChange(node) {
     return node;
 }
 
-/**
- * js执行代码顶部添加全局响应式变量引用定义
- * const LETJS_STATE = this;
- * 
- * @param {*} ast 抽象语法树
- * @returns 返回添加了全局state变量的抽象语法树
- */
-export function unshiftStateCode(ast) {
-    if(!ast) return;
-    // 头部添加全局变量用于绑定响应式数据
-    // const LETJS_STATE = this;
-    let codeNode = {
-        type: 'VariableDeclaration',
-        declarations: [
-            {
-                type: 'VariableDeclarator',
-                id: {
-                    type: 'Identifier',
-                    name: GLOBALSTATE
-                },
-                init: {
-                    type: 'ThisExpression'
-                }
-            }
-        ],
-        kind: "const"
-    }
-    ast.unshift(codeNode);
-    return ast;
-}
 
 /**
  * 替换变量节点
