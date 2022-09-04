@@ -8,7 +8,7 @@ import { resMount } from './component/res';
 import { insertionSort } from './component/codeStr';
 import { parseScript } from 'esprima';
 import { generate } from 'escodegen';
-import { variableSets, transform, unshiftStateCode } from './code';
+import { VARIABLESETS, transform, unshiftStateCode } from './code';
 
 let autoPlayTimer = null;//自动播放动画定时器
 let View = null;//代码编辑器
@@ -57,7 +57,6 @@ onClick('btnNext', () => {
 })
 
 onClick('btnAuto', () => {
-    console.log(autoPlayTimer)
     if(autoPlayTimer) {
         stepStop();
     } else {
@@ -86,7 +85,7 @@ function run() {
     let ast = parseScript(jscodeStr);
     let newAst = transform(ast);
     newAst = unshiftStateCode(newAst);
-    setStates(variableSets);
+    setStates(VARIABLESETS);
     watchState();
     let letJsCode = generate(newAst);
     try {
@@ -136,7 +135,7 @@ function initData() {
     domData.step = 0;
     stepData.data = [];
     domData.stepRes = {};
-    variableSets.clear();
+    VARIABLESETS.clear();
 }
 
 
@@ -177,7 +176,6 @@ function setStates(sets) {
 function watchState() {
     const scope = effectScope();
     scope.run(() => {
-        console.log(state, 'ress')
         for(let item in state) {
             domData.names.push(item);
             effect(() => {
