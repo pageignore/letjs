@@ -1,5 +1,9 @@
 # letjs
-在线Javascript代码运行去，可以自动监听代码运行的变量变化。
+
+https://pageignore.github.io/letjs/
+
+
+在线Javascript代码运行器，支持自动监听代码中定义的变量变化。
 
 基于codemirror，@vue/reactivity。
 
