@@ -1,6 +1,6 @@
 
 // 用于传递到js执行代码的全局响应式变量名
-const GLOBALSTATE = 'LETJS_STATE';
+export const GLOBALSTATE = 'LETJS_STATE';
 
 /**
  * 代码中定义的变量集合
@@ -191,7 +191,7 @@ function oneVarChange(declaration, isInitInFor) {
         right: isNeedChange(declaration.init) ? valChange(declaration.init.name) : declaration.init,
     }
     node.expression = expression;
-    return isInitInFor ? expression : expression;
+    return isInitInFor ? expression : node;
 }
 
 /**
@@ -218,7 +218,7 @@ function manyVarChange(declarations, isInitInFor) {
         }
         expression.expressions.push(assignmentExpression);
     })
-    return isInitInFor ? expressionStatement : expressionStatement;
+    return isInitInFor ? expressionStatement : node;
 }
 
 /**
