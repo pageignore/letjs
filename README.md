@@ -1,6 +1,6 @@
 # letjs
 
-立即体验 https://pageignore.github.io/letjs/
+[立即体验]([http://localhost/](https://pageignore.github.io/letjs/))
 
 
 在线Javascript代码运行器，支持自动监听代码中定义的变量变化。
