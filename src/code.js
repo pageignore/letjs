@@ -175,7 +175,7 @@ function variablesChange(node, isInitInFor) {
 }
 
 /**
- * 单个函数定义 let a = 1;
+ * 单个变量定义 let a = 1;
  * @param {*} declaration 
  * @param {*} isInitInFor 
  * @returns 
@@ -195,7 +195,7 @@ function oneVarChange(declaration, isInitInFor) {
 }
 
 /**
- * 多个函数定义 let a = 1,b = 2;
+ * 多个变量定义 let a = 1,b = 2;
  * @param {*} declaration 
  * @param {*} isInitInFor 
  * @returns 
