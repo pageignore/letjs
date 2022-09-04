@@ -107,7 +107,7 @@ function jscodeFromDoctext() {
     const doc = View.state.doc;
     doc.text.forEach(t => {
         if(t[t.length - 1] != ';') {
-            t+=';'
+            t += ';'
         }
         jscodeStr += `${t}`
     });
@@ -122,20 +122,20 @@ function codeEdotorInit() {
     })
 }
 
-function setStep() {
-    // 程序正常运行 设置第一步的变量展示数据
-    setStepData();
-    // 设置当前步数数字展示
-    setStepNumber();
-    // 默认自动播放
-}
-
 function initData() {
     domData.names = [];
     domData.step = 0;
     stepData.data = [];
     domData.stepRes = {};
     VARIABLESETS.clear();
+}
+
+function setStep() {
+    // 程序正常运行 设置第一步的变量展示数据
+    setStepData();
+    // 设置当前步数数字展示
+    setStepNumber();
+    // 默认自动播放
 }
 
 
