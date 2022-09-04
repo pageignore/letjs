@@ -5,11 +5,10 @@ import { javascript } from "@codemirror/lang-javascript";
 import { getId, onClick, isArray, isObject } from './utils';
 import { stepMount } from './component/step';
 import { resMount } from './component/res';
-import { codeStr2, codeStr5 } from './component/codeStr';
+import { insertionSort } from './component/codeStr';
 import { parseScript } from 'esprima';
 import { generate } from 'escodegen';
 import { variableSets, transform, unshiftStateCode } from './code';
-// import transformer from './transform';
 
 let autoPlayTimer = null;//自动播放动画定时器
 let View = null;//代码编辑器
@@ -49,8 +48,11 @@ onClick('btnPrev', () => {
 })
 
 onClick('btnNext', () => {
-    if(domData.step >= stepData.data.length - 1) return;
-    ++domData.step;
+    if(domData.step >= stepData.data.length - 1) {
+        domData.step = 0;
+    } else {
+        ++domData.step;
+    }
     setStep();
 })
 
@@ -84,13 +86,9 @@ function run() {
     let ast = parseScript(jscodeStr);
     let newAst = transform(ast);
     newAst = unshiftStateCode(newAst);
-    console.log(newAst, 'newAst')
     setStates(variableSets);
     watchState();
-    // let newAst = transform(ast, variableSets);
-    // console.log(a)
     let letJsCode = generate(newAst);
-    console.log(letJsCode)
     try {
         let func = new Function(letJsCode)
         func.call(state)
@@ -119,7 +117,7 @@ function jscodeFromDoctext() {
 
 function codeEdotorInit() {
     View = new EditorView({
-        doc: codeStr2,
+        doc: insertionSort,
         extensions: [basicSetup, javascript()],
         parent: document.getElementById('editor')
     })

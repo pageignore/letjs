@@ -1,6 +1,5 @@
-export const codeStr = `/*暂不支持递归调用；函数多次调用；
-*变量名字避免相同（函数参数名也要跟变量不同）
-*不支持局部变量
+export const codeStr = `/*为了避免递归调用会出现的问题，
+*在函数体内只支持var关键字定义的变量监听变化
 */
 function sort(arr) {
     for(let i = 0; i < arr.length - 1; i++) {  
@@ -13,7 +12,7 @@ function sort(arr) {
         }
     }
 }
-let test = [10,2,7,4]
+let test = [10,2,7,4,5,9,29,3,15,5]
 sort(test);
 `
 
@@ -37,16 +36,15 @@ function sort(arr) {
             res.push(orderRight.shift());
         }
     }
+    return res;
   }
-  let test = [5,2,4];
-  let ssss = 2;
-  let b = test = ssss = 4
-  sort(test);
+  var test = [5,2,4];
+  test = sort(test);
+  console.log(test, 'test')
   `
 
-export const insertionSort = `/*暂不支持递归调用；函数多次调用；
-*变量名字避免相同（函数参数名也要跟变量不同）
-*不支持局部变量
+export const insertionSort = `/*为了避免递归调用会出现的问题，
+*在函数体内只支持var关键字定义的变量监听变化
 */
 function insertionSort(arr) {
     for(let i = 0; i < arr.length; i++) {
@@ -65,22 +63,4 @@ function insertionSort(arr) {
 }
 let test = [10,2,7,4,20,5,6]
 insertionSort(test);
-`
-
-export const codeStr5 = `function add(a, b) {
-    a+=2
-    let c = 4;
-    return a + b + c;
-}
-let as = 1;
-const bs = as;
-as = 3;
-as = bs;
-LETJS_STATE.as = 3;
-LETJS_STATE.as = LETJS_STATE.bs;
-let res = add(as,bs)
-add(1,2)
-add(as,bs);
-add(LETJS_STATE.as,LETJS_STATE.bs);
-console.log(res)
 `
