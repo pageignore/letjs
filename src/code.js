@@ -38,18 +38,17 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
 
     // 属性操作符
     if(astNote.type === 'MemberExpression') {
-        if(astNote.object.type === 'Identifier'
-         && VARIABLESETS.has(astNote.object.name)) {
+        if(isNeedChange(astNote.object)) {
             astNote.object = valChange(astNote.object.name);
         } else {
             astNote.object = transform(astNote.object);
         }
-        if(astNote.property.type === 'Identifier'
-         && VARIABLESETS.has(astNote.property.name)
-         ) {
+        if(isNeedChange(astNote.property)) {
             if(astNote.object.name != GLOBALSTATE) {
+                // 对象不是全局响应式对象
                 astNote.property = valChange(astNote.property.name);
             } else {
+                // 如果对象已经是全局定义的响应式对象就不再处理替换，不然会死循环
                 astNote.property = astNote.property;
             }
         } else {
@@ -122,7 +121,7 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
     if(astNote.type === 'Program') {
         astNote.body = astNote.body.map(item => transform(item));
     }
-    
+
     return astNote;
 }
 
@@ -167,6 +166,7 @@ function variablesChange(node, isInitInFor) {
     if(!node) return node;
     let declarations = node.declarations;
     if(declarations.length > 1) {
+        // 多个函数定义语句
         node = manyVarChange(declarations, isInitInFor);
     } else {
         node = oneVarChange(declarations[0], isInitInFor);
