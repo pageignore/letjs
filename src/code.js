@@ -19,7 +19,7 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
  * 通过js抽象语法树替换js代码中的变量为全局响应式对象引用
  * @param {Array} astBody js抽象语法树body
  * @param {Set} VARIABLESETS 变量名Set容器
- * @returns net ast 替换后的抽象语法树
+ * @returns new ast 替换后的抽象语法树
  */
  export function transform(astNote , isInFn = false, isInitInFor = false) {
     if(!astNote) return;
