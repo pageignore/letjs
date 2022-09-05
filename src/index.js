@@ -5,7 +5,7 @@ import { javascript } from "@codemirror/lang-javascript";
 import { getId, onClick, isArray, isObject } from './utils';
 import { stepMount } from './component/step';
 import { resMount } from './component/res';
-import { insertionSort } from './component/codeStr';
+import { kmpSearch } from './component/codeStr';
 import { parseScript } from 'esprima';
 import { generate } from 'escodegen';
 import { VARIABLESETS, transform, unshiftStateCode } from './code';
@@ -88,6 +88,7 @@ function run() {
     setStates(VARIABLESETS);
     watchState();
     let letJsCode = generate(newAst);
+    console.log(letJsCode)
     try {
         let func = new Function(letJsCode)
         func.call(state)
@@ -106,6 +107,7 @@ function jscodeFromDoctext() {
     let jscodeStr = '';
     const doc = View.state.doc;
     doc.text.forEach(t => {
+        t = t.replace(/\/\/.*/g, '') // 删除注释 //开头 
         if(t[t.length - 1] != ';') {
             t += ';'
         }
@@ -116,7 +118,7 @@ function jscodeFromDoctext() {
 
 function codeEdotorInit() {
     View = new EditorView({
-        doc: insertionSort,
+        doc: kmpSearch,
         extensions: [basicSetup, javascript()],
         parent: document.getElementById('editor')
     })

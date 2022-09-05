@@ -1,3 +1,4 @@
+import { isArray } from "@vue/shared";
 import { isNull } from "./utils";
 
 // 用于传递到js执行代码的全局响应式变量名
@@ -25,12 +26,12 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
     astNote = isNeedChange(astNote) ? valChange(astNote.name) : astNote;
     // 变量类型 函数体内为了避免递归调用的情况，只允许 var 声明的变量响应式
     if(astNote.type === 'VariableDeclaration' && (!isInFn || (isInFn && astNote.kind == 'var'))) {
-        setVariables(astNote);
-        astNote = variablesChange(astNote, isInFn, isInitInFor);
+        astNote = setVariables(astNote);
+        astNote = variablesChange(astNote, isInitInFor);
     } else if(astNote.type === 'VariableDeclaration' && isInFn && astNote.kind != 'var') {
         // 函数体内非var 定义的变量 寻找右边的赋值，如果有引用var定义的变量则要替换
         astNote.declarations = astNote.declarations.map(item => {
-            if(init) {
+            if(item.init) {
                 if(item.init.type === 'VariableDeclaration') {
                     item.init = isNeedChange(item.init) ? valChange(item.init.name) : item.init;
                 } else {
@@ -102,13 +103,13 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
 
     // 函数体继续寻找变量
     if(astNote.type === 'FunctionDeclaration') {
-        astNote.body.body = astNote.body.body.map(item => transform(item, true));
+        if(astNote.body) astNote.body = transform(astNote.body, true);
     }
 
     // While循环
     if(astNote.type === 'WhileStatement') {
         astNote.test = transform(astNote.test);
-        astNote.body.body = astNote.body.body.map(item => transform(item, isInFn));
+        if(astNote.body) astNote.body = transform(astNote.body, isInFn);
     }
 
     // for循环
@@ -116,18 +117,18 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
         astNote.init = transform(astNote.init, isInFn, true);
         astNote.test = transform(astNote.test, isInFn);
         astNote.update = transform(astNote.update, isInFn);
-        astNote.body.body = astNote.body.body.map(item => transform(item, isInFn));
+        if(astNote.body) astNote.body = transform(astNote.body, isInFn);
     }
 
     // for..in for..of
     if(astNote.type === 'ForInStatement' || astNote.type === 'ForOfStatement') {
         if(astNote.left) {
-            setVariables(astNote.left);
+            astNote = setVariables(astNote.left);
             let node = astNote.left.declarations[0].id;
             astNote.left = isNeedChange(node) ? valChange(node.name) : astNote.left;
         }
         if(astNote.right) astNote.right =  transform(astNote.right, isInFn);
-        astNote.body.body = astNote.body.body.map(item => transform(item, isInFn));
+        if(astNote.body) astNote.body = transform(astNote.body, isInFn);
     }
 
     if(astNote.type === 'BlockStatement') {
@@ -135,7 +136,7 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
     }
 
     if(astNote.type === 'Program') {
-        astNote.body = astNote.body.map(item => transform(item, isInFn));
+        if(astNote.body) astNote.body = astNote.body.map(item => transform(item, isInFn));
     }
 
     return astNote;
@@ -234,7 +235,7 @@ function manyVarChange(declarations, isInitInFor) {
         }
         expression.expressions.push(assignmentExpression);
     })
-    return isInitInFor ? expressionStatement : node;
+    return isInitInFor ? expression : node;
 }
 
 
@@ -274,13 +275,16 @@ function isNeedChange(node) {
  * @param {*} astNote 
  */
 function setVariables(astNote) {
-    astNote.declarations.forEach(varItem => {
+    astNote.declarations = astNote.declarations.map(varItem => {
         // 变量名 a; let a = '11'
        let name = varItem.id.name;
        // 同名 变量名后面加_
        if(VARIABLESETS.has(name)) {
+           throw '暂时不支持同名变量，包括块级作用域';
            name += '_'; 
        }
        VARIABLESETS.add(name);
+       return varItem;
    })
+   return astNote;
 }

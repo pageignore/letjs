@@ -1,4 +1,4 @@
-export const codeStr = `/*为了避免递归调用会出现的问题，
+export const bubbleSort = `/*为了避免递归调用会出现的问题，
 *在函数体内只支持var关键字定义的变量监听变化
 */
 function sort(arr) {
@@ -16,7 +16,7 @@ let test = [10,2,7,4,5,9,29,3,15,5]
 sort(test);
 `
 
-export const codeStr2 = `
+export const mergeSort = `
 function sort(arr) {
     if(arr.length === 1) {
         return arr;
@@ -63,4 +63,34 @@ function insertionSort(arr) {
 }
 let test = [10,2,7,4,20,5,6]
 insertionSort(test);
+`
+
+export const kmpSearch = `/*由于函数递归调用必须要有块级作用域，
+*在函数体内只支持var关键字定义的变量监听变化,let、const正常执行
+*/
+function indexOf(haystack, needle) {
+    if(needle.length === 0) return 0;
+    const n = haystack.length;
+    const m = needle.length;
+    var next = [];
+    next[0] = 0;
+    for(let i = 1, j = 0; i < m; i++) {
+        while(j > 0 && needle[i] != needle[j]) j = next[j-1];
+        if(needle[i] == needle[j]) j++;
+        next[i] = j;
+    }
+    var currStr = ''; // 用于调试的代码
+    var currPattern = ''; // 用于调试的代码
+    for(var i = 0, j = 0; i < n; i++) {
+        currStr = haystack.substr(i, n) // 用于调试的代码
+        currPattern = needle.substr(j, m) // 用于调试的代码
+        while(j > 0 && haystack[i] != needle[j]) j = next[j - 1];
+        if(haystack[i] == needle[j]) j++;
+        if(j == m) return i - m + 1;
+    }
+    return -1;
+};
+let str = 'asabsabcxabcdpabcdaqabcdabclabcdabcy';
+let pattern = 'abcdabcy';
+let res = indexOf(str, pattern);
 `
