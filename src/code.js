@@ -1,3 +1,4 @@
+import { isNull } from "./utils";
 
 // 用于传递到js执行代码的全局响应式变量名
 export const GLOBALSTATE = 'LETJS_STATE';
@@ -22,7 +23,6 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
  export function transform(astNote , isInFn = false, isInitInFor = false) {
     if(!astNote) return;
     astNote = isNeedChange(astNote) ? valChange(astNote.name) : astNote;
-    
     // 变量类型 函数体内为了避免递归调用的情况，只允许 var 声明的变量响应式
     if(astNote.type === 'VariableDeclaration' && (!isInFn || (isInFn && astNote.kind == 'var'))) {
         setVariables(astNote);
@@ -30,10 +30,12 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
     } else if(astNote.type === 'VariableDeclaration' && isInFn && astNote.kind != 'var') {
         // 函数体内非var 定义的变量 寻找右边的赋值，如果有引用var定义的变量则要替换
         astNote.declarations = astNote.declarations.map(item => {
-            if(item.init.type === 'VariableDeclaration') {
-                item.init = isNeedChange(item.init) ? valChange(item.init.name) : item.init;
-            } else {
-                item.init = transform(item.init);
+            if(init) {
+                if(item.init.type === 'VariableDeclaration') {
+                    item.init = isNeedChange(item.init) ? valChange(item.init.name) : item.init;
+                } else {
+                    item.init = transform(item.init);
+                }
             }
             return item;
         });
@@ -114,6 +116,17 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
         astNote.init = transform(astNote.init, isInFn, true);
         astNote.test = transform(astNote.test, isInFn);
         astNote.update = transform(astNote.update, isInFn);
+        astNote.body.body = astNote.body.body.map(item => transform(item, isInFn));
+    }
+
+    // for..in for..of
+    if(astNote.type === 'ForInStatement' || astNote.type === 'ForOfStatement') {
+        if(astNote.left) {
+            setVariables(astNote.left);
+            let node = astNote.left.declarations[0].id;
+            astNote.left = isNeedChange(node) ? valChange(node.name) : astNote.left;
+        }
+        if(astNote.right) astNote.right =  transform(astNote.right, isInFn);
         astNote.body.body = astNote.body.body.map(item => transform(item, isInFn));
     }
 
@@ -251,6 +264,7 @@ function valChange(name) {
  * @returns 
  */
 function isNeedChange(node) {
+    if(!node) return false;
     // 如果是变量类型，且是通过定义的变量，非函数传参
     return node.type === 'Identifier' && VARIABLESETS.has(node.name);
 }

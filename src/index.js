@@ -16,7 +16,7 @@ let View = null;//代码编辑器
 const isAuto = true; //是否自动播放变量变化
 
 // 存储代码中变量数据
-const state = reactive({
+let state = reactive({
 })
 
 // 变量变化数据
@@ -124,10 +124,13 @@ function codeEdotorInit() {
 }
 
 function initData() {
-    domData.names = [];
-    domData.step = 0;
+    state = reactive({});
+    domData.names = [], //所有变量
+    domData.endRes = {}, //最终运行结果
+    domData.stepRes = reactive({}), //显示当前变化
+    domData.step = 0,//变化步数
+    domData.runTime = 0
     stepData.data = [];
-    domData.stepRes = {};
     VARIABLESETS.clear();
 }
 
