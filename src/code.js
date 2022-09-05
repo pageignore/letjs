@@ -131,11 +131,7 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
         if(astNote.body) astNote.body = transform(astNote.body, isInFn);
     }
 
-    if(astNote.type === 'BlockStatement') {
-        if(astNote.body) astNote.body = astNote.body.map(item => transform(item, isInFn));
-    }
-
-    if(astNote.type === 'Program') {
+    if(astNote.type === 'BlockStatement' || astNote.type === 'Program') {
         if(astNote.body) astNote.body = astNote.body.map(item => transform(item, isInFn));
     }
 
