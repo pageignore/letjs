@@ -1,6 +1,3 @@
-import { isArray } from "@vue/shared";
-import { isNull } from "./utils";
-
 // 用于传递到js执行代码的全局响应式变量名
 export const GLOBALSTATE = 'LETJS_STATE';
 
