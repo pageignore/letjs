@@ -21,6 +21,7 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
  export function transform(astNote , isInFn = false, isInitInFor = false) {
     if(!astNote) return;
     astNote = isNeedChange(astNote) ? valChange(astNote.name) : astNote;
+    
     // 变量类型 函数体内为了避免递归调用的情况，只允许 var 声明的变量响应式
     if(astNote.type === 'VariableDeclaration' && (!isInFn || (isInFn && astNote.kind == 'var'))) {
         astNote = setVariables(astNote);
