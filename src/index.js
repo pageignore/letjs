@@ -88,6 +88,7 @@ function run() {
     setStates(VARIABLESETS);
     watchState();
     let letJsCode = generate(newAst);
+    console.log(letJsCode, 'letJsCode')
     try {
         let func = new Function(letJsCode)
         func.call(state)

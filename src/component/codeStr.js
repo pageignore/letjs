@@ -43,13 +43,13 @@ function sort(arr) {
   console.log(test, 'test')
   `
 
-export const insertionSort = `/*为了避免递归调用会出现的问题，
-*在函数体内只支持var关键字定义的变量监听变化
+export const insertionSort = `/*由于函数递归调用必须要有块级作用域，
+*在函数体内只支持var关键字定义的变量监听变化,let、const正常执行
 */
 function insertionSort(arr) {
-    for(let i = 0; i < arr.length; i++) {
-        let temp = arr[i];
-        let j = i;
+    for(var i = 0; i < arr.length; i++) {
+        var temp = arr[i];
+        var j = i;
         while(j > 0) {
             if(arr[j - 1] > temp) {
                 arr[j] = arr[j - 1];    
