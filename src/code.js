@@ -67,7 +67,7 @@ export const TYPEOfBT = ['AssignmentExpression', 'LogicalExpression', 'BinaryExp
     }
 
     // 函数调用
-    if(astNote.type === 'CallExpression') {
+    if(astNote.type === 'CallExpression' || astNote.type === 'NewExpression') {
         if(astNote.arguments) astNote.arguments = astNote.arguments.map(item => transform(item, isInFn));
         if(astNote.callee) astNote.callee = transform(astNote.callee, isInFn);
     }

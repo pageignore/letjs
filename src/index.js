@@ -107,10 +107,7 @@ function jscodeFromDoctext() {
     const doc = View.state.doc;
     doc.text.forEach(t => {
         t = t.replace(/\/\/.*/g, '') // 删除注释 //开头 
-        if(t[t.length - 1] != ';') {
-            t += ';'
-        }
-        jscodeStr += `${t}`
+        jscodeStr += `${t}\n`
     });
     return jscodeStr;
 }
