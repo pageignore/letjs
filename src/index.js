@@ -61,7 +61,7 @@ onClick('btnAuto', () => {
         stepStop();
     } else {
         autoStep();
-        getId('btnAuto').innerText = '暂停播放';
+        setBtnText('暂停播放');
     }
 })
 
@@ -75,8 +75,9 @@ document.onkeydown = (e) => {
 
 function stepStop() {
     stop();
-    getId('btnAuto').innerText = '自动播放';
+    setBtnText('自动播放');
 }
+
 
 function run() {
     stop(); //每次运行停止之前的动画
@@ -224,4 +225,8 @@ function shiftEmptyData() {
             return;
         }
     })
+}
+
+function setBtnText(text) {
+    getId('btnAuto').innerText = text;
 }
