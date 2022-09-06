@@ -1,4 +1,4 @@
-const getId = (id, cb) => {
+const getId = (id) => {
     return document.getElementById(id);
 }
 const onClick = (id, cb) => {
