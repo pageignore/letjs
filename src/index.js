@@ -61,7 +61,6 @@ onClick('btnAuto', () => {
         stepStop();
     } else {
         autoStep();
-        setBtnText('暂停播放');
     }
 })
 
@@ -160,8 +159,8 @@ function autoStep() {
         }
         setStep();
         autoStep();
-        getId('btnAuto').innerText = '暂停播放';
     }, 1000);
+    setBtnText('暂停播放');
 }
 
 function stop() {
